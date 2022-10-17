@@ -97,6 +97,25 @@ def test_book_invalid_club_should_status_code_200_and_return_data(client):
     assert response.status_code == 500
 
 
+def test_book_invalid_competition_should_status_code_200_and_return_data(client):
+
+    foundClub = {
+        "name":"Simply Lift",
+        "email":"john@simplylift.co",
+        "points":"13"
+    }
+
+    foundCompetition = {
+            "name": "invalidCompetition",
+            "date": "2020-10-22 13:30:00",
+            "numberOfPlaces": "0"
+        }
+    response = client.get('/book/{0}/{1}'.format(foundCompetition['name'], foundClub["name"]))
+    assert response.status_code == 500
+
+
+
+
 
 
 
