@@ -80,6 +80,23 @@ def test_book_should_status_code_200_and_return_data(client):
     assert data.find('<input type="hidden" name="competition" value="{0}">'.format(foundCompetition['name'])) != -1
 
 
+def test_book_invalid_club_should_status_code_200_and_return_data(client):
+    
+    foundClub = {
+        "name":"invalidClub",
+        "email":"invalidClub@test.test",
+        "points":"0"
+    }
+
+    foundCompetition = {
+            "name": "Fall Classic",
+            "date": "2020-10-22 13:30:00",
+            "numberOfPlaces": "13"
+        }
+    response = client.get('/book/{0}/{1}'.format(foundCompetition['name'], foundClub["name"]))
+    assert response.status_code == 500
+
+
 
 
 
