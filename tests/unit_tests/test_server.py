@@ -114,14 +114,9 @@ def test_book_invalid_competition_should_status_code_200_and_return_data(client)
     assert response.status_code == 500
 
 
-
-
-
-
-
-
 #    if foundClub and foundCompetition:
 #        return render_template('booking.html',club=foundClub,competition=foundCompetition)
 #    else:
 #        flash("Something went wrong-please try again")
 #        return render_template('welcome.html', club=club, competitions=competitions)
+
