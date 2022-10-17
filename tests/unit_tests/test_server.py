@@ -120,3 +120,16 @@ def test_book_invalid_competition_should_status_code_200_and_return_data(client)
 #        flash("Something went wrong-please try again")
 #        return render_template('welcome.html', club=club, competitions=competitions)
 
+
+def test_purchasePlaces_should_status_code_200_and_return_data(client):
+    placesRequired = 1
+
+    return_value = client.post("/purchasePlaces",
+                   data = {'competition': "Fall Classic",
+                           'club': "Simply Lift",
+                           'places': placesRequired}
+    )
+
+    assert return_value.status_code == 200
+    data = return_value.data.decode()
+    assert data.find('<li>Great-booking complete!</li>') != -1
