@@ -54,7 +54,7 @@ def book(competition,club):
     else:
         flash("Something went wrong-please try again")
         competition_date_validity(competitions)
-        return render_template('welcome.html', club=club, competitions=competitions)
+        return render_template('welcome.html', club=club, competitions=competitions, clubs=clubs)
 
 
 @app.route('/purchasePlaces',methods=['POST'])
@@ -68,7 +68,7 @@ def purchasePlaces():
 
     competition_date_validity(competitions)
 
-    return render_template('welcome.html', club=club, competitions=competitions)
+    return render_template('welcome.html', club=club, competitions=competitions, clubs=clubs)
 
 
 # TODO: Add route for points display
