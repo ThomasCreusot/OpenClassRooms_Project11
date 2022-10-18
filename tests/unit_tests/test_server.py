@@ -121,15 +121,34 @@ def test_book_invalid_competition_should_status_code_200_and_return_data(client)
 #        return render_template('welcome.html', club=club, competitions=competitions)
 
 
-def test_purchasePlaces_should_status_code_200_and_return_data(client):
+def test_purchasePlaces_should_status_code_200_update_points_and_return_data(client):
+    competition = {
+            "name": "Spring Festival",
+            "date": "2020-03-27 10:00:00",
+            "numberOfPlaces": "25"
+        }
+
+    club = {
+        "name":"Simply Lift",
+        "email":"john@simplylift.co",
+        "points":"13"
+    }
+
     placesRequired = 1
 
     return_value = client.post("/purchasePlaces",
-                   data = {'competition': "Fall Classic",
-                           'club': "Simply Lift",
+                   data = {'competition': competition["name"],
+                           'club': club["name"],
                            'places': placesRequired}
     )
 
+
     assert return_value.status_code == 200
     data = return_value.data.decode()
+
     assert data.find('<li>Great-booking complete!</li>') != -1
+
+    expected_club_points = int(club['points'])-placesRequired
+    expected_competition_places = int(competition['numberOfPlaces'])-placesRequired
+    assert data.find('Points available: {0}'.format(expected_club_points)) != -1
+    assert data.find('Number of Places: {0}'.format(expected_competition_places)) != -1
