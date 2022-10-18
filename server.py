@@ -5,6 +5,9 @@ from datetime import datetime
 from flask import Flask,render_template,request,redirect,flash,url_for
 
 
+MAX_CLUB_PLACES_PER_COMPETITION = 12
+
+
 def loadClubs():
     with open('clubs.json') as c:
          listOfClubs = json.load(c)['clubs']
@@ -23,6 +26,7 @@ app.secret_key = 'something_special'
 competitions = loadCompetitions()
 clubs = loadClubs()
 
+
 def competition_date_validity(competitions):
     """Determines for each competition if it is valid or not, based on its date"""
     for competition in competitions:
@@ -32,6 +36,36 @@ def competition_date_validity(competitions):
             competition["date_validity"]=True
         elif competition_time <= now:
             competition["date_validity"]=False
+
+
+def get_authorisation_to_reserve_places(club, competition, placesRequired):
+    if 'reserved_competitions' in club:
+        # Club already reserved (a) place(s) at least in a competition
+        if competition["name"] in club["reserved_competitions"]:
+            if placesRequired <= MAX_CLUB_PLACES_PER_COMPETITION - club["reserved_competitions"][competition["name"]]:
+                # Club already reserved for this competition : dict update
+                club["reserved_competitions"][competition["name"]] += placesRequired
+                print(club)
+                return True
+            else: 
+                return False
+        else:
+            # Club already reserved but not for this competition : dict creation
+            if placesRequired <= MAX_CLUB_PLACES_PER_COMPETITION:
+                club["reserved_competitions"][competition["name"]] = placesRequired
+                print(club)
+                return True
+            else:
+                return False
+    else:
+        # Club never reserved places for any : dict creation
+        club["reserved_competitions"] = {}
+        if placesRequired <= MAX_CLUB_PLACES_PER_COMPETITION:
+            club["reserved_competitions"][competition["name"]] = placesRequired
+            print(club)
+            return True
+        else:
+            return False
 
 
 @app.route('/')
@@ -62,11 +96,24 @@ def purchasePlaces():
     competition = [c for c in competitions if c['name'] == request.form['competition']][0]
     club = [c for c in clubs if c['name'] == request.form['club']][0]
     placesRequired = int(request.form['places'])
-    competition['numberOfPlaces'] = int(competition['numberOfPlaces'])-placesRequired
-    club['points'] = int(club['points'])-placesRequired
-    flash('Great-booking complete!')
 
-    competition_date_validity(competitions)
+    authorisation_to_reserve_places = get_authorisation_to_reserve_places(club, competition, placesRequired)
+    if authorisation_to_reserve_places == True:
+        competition['numberOfPlaces'] = int(competition['numberOfPlaces'])-placesRequired
+        club['points'] = int(club['points'])-placesRequired
+        flash('Great-booking complete!')
+
+        competition_date_validity(competitions)
+
+    else:
+        flash('You are not allowed to book more than 12 places for a competition.')
+        if 'reserved_competitions' in club:
+            if competition["name"] in club["reserved_competitions"]:
+                flash('You already booked {0} places in competition {1} and asked {2} more'.format(
+                    club["reserved_competitions"][competition["name"]],
+                    competition["name"],
+                    placesRequired))
+
 
     return render_template('welcome.html', club=club, competitions=competitions, clubs=clubs)
 
