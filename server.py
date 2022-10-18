@@ -68,6 +68,13 @@ def get_authorisation_to_reserve_places(club, competition, placesRequired):
             return False
 
 
+def get_enough_points_to_reserve_places(club, placesRequired):
+    if int(club['points']) >= placesRequired:
+        return True
+    else:
+        return False
+
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -98,7 +105,10 @@ def purchasePlaces():
     placesRequired = int(request.form['places'])
 
     authorisation_to_reserve_places = get_authorisation_to_reserve_places(club, competition, placesRequired)
-    if authorisation_to_reserve_places == True:
+    enough_points_to_reserve_places = get_enough_points_to_reserve_places(club, placesRequired)
+
+    if authorisation_to_reserve_places == True and enough_points_to_reserve_places == True:
+
         competition['numberOfPlaces'] = int(competition['numberOfPlaces'])-placesRequired
         club['points'] = int(club['points'])-placesRequired
         flash('Great-booking complete!')
@@ -106,10 +116,10 @@ def purchasePlaces():
         competition_date_validity(competitions)
 
     else:
-        flash('You are not allowed to book more than 12 places for a competition.')
+        flash('You are neither allowed to book more than 12 places for a competition, nor allowed to spend more points than you have on your account ({0}).'.format(club['points']))
         if 'reserved_competitions' in club:
             if competition["name"] in club["reserved_competitions"]:
-                flash('You already booked {0} places in competition {1} and asked {2} more'.format(
+                flash('You already booked {0} places in competition {1} and asked {2} more.'.format(
                     club["reserved_competitions"][competition["name"]],
                     competition["name"],
                     placesRequired))
