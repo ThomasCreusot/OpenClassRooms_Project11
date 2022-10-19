@@ -38,7 +38,7 @@ def test_showSummary_valid_known_email_should_status_code_200_and_return_data(cl
     assert data.find('Points available: {0}'.format(club['points'])) != -1
 
 
-def test_showSummary_valid_unknown_email_should_status_code_500(client):
+def test_showSummary_valid_unknown_email_should_status_code_302(client):
 
     # TBD : mettre en place un mock ?
     club = {
@@ -51,9 +51,9 @@ def test_showSummary_valid_unknown_email_should_status_code_500(client):
         "/showSummary", data=club
         )
 
-    assert return_value.status_code == 500
+    assert return_value.status_code == 200
     data = return_value.data.decode()
-    assert data.find('The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.') != -1
+    assert data.find('Unknown email adress') != -1
 
 
 def test_book_should_status_code_200_and_return_data(client):
