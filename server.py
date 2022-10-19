@@ -75,15 +75,30 @@ def get_enough_points_to_reserve_places(club, placesRequired):
         return False
 
 
+def known_adress_or_not(emailFromForm):
+    known_adress = False
+    for a_club in clubs:
+        if a_club['email'] == emailFromForm:
+            known_adress = True
+        else:
+            pass
+    return known_adress
+
 @app.route('/')
 def index():
     return render_template('index.html')
 
 @app.route('/showSummary',methods=['POST'])
 def showSummary():
-    club = [club for club in clubs if club['email'] == request.form['email']][0]
-    competition_date_validity(competitions)
-    return render_template('welcome.html',club=club,competitions=competitions, clubs=clubs)
+    known_adress = known_adress_or_not(request.form['email'])
+
+    if known_adress == True : 
+        club = [club for club in clubs if club['email'] == request.form['email']][0]
+        competition_date_validity(competitions)
+        return render_template('welcome.html',club=club,competitions=competitions, clubs=clubs)
+    else: 
+        flash("Unknown email adress")
+        return render_template('index.html')
 
 
 @app.route('/book/<competition>/<club>')
