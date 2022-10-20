@@ -3,7 +3,7 @@ import server
 from .conftest import client  # import de la fixture
 
 from server import index, showSummary, book, purchasePlaces, logout
-
+from server import MAX_CLUB_PLACES_PER_COMPETITION
 
 #index / Testez le code de réponse
 def test_index_should_status_code_be_200(client):
@@ -185,3 +185,56 @@ def test_purchasePlaces_should_status_code_200_update_points_and_return_data(cli
     expected_competition_places = int(competition['numberOfPlaces'])-placesRequired
     assert data.find('Points available: {0}'.format(expected_club_points)) != -1
     assert data.find('Number of Places: {0}'.format(expected_competition_places)) != -1
+
+
+def test_purchasePlaces_should_status_code_200_flash_too_much_placesRequired(client, monkeypatch):
+
+    test_competitions = [
+        {
+            "name": "A competition",
+            "date": "3000-01-01 00:00:00",
+            "numberOfPlaces": "30"
+        }]
+
+    test_clubs = [
+        {
+            "name":"A club",
+            "email": "admin@mail.com",
+            "points":"4"
+        }]
+
+    monkeypatch.setattr(server, 'competitions', test_competitions)
+    monkeypatch.setattr(server, 'clubs', test_clubs)
+
+
+    competition = {
+            "name": "A competition",
+            "date": "3000-01-01 00:00:00",
+            "numberOfPlaces": "30"
+        }
+
+    club = {
+            "name":"A club",
+            "email": "admin@mail.com",
+            "points":"4"
+    }
+
+    placesRequired = MAX_CLUB_PLACES_PER_COMPETITION + 1
+
+    return_value = client.post("/purchasePlaces",
+                   data = {'competition': competition["name"],
+                           'club': club["name"],
+                           'places': placesRequired}
+    )
+
+
+    assert return_value.status_code == 200
+    data = return_value.data.decode()
+
+    assert data.find('You are neither allowed to book more than') != -1
+
+    expected_club_points = int(club['points'])
+    expected_competition_places = int(competition['numberOfPlaces'])
+    assert data.find('Points available: {0}'.format(expected_club_points)) != -1
+    assert data.find('Number of Places: {0}'.format(expected_competition_places)) != -1
+    print(data)
