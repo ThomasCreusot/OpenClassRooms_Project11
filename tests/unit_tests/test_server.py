@@ -1,29 +1,22 @@
-from this import d
 import server
 
-from .conftest import client  # import de la fixture
+from .conftest import client  # fixture import
 
 from server import index, showSummary, book, purchasePlaces, logout
 from server import MAX_CLUB_PLACES_PER_COMPETITION
 
-#index / Testez le code de réponse
+
 def test_index_should_status_code_be_200(client):
     response = client.get('/')
     data = response.data.decode()
 
     assert response.status_code == 200
-    # de ce que je comprends : find() est une fonction intégrée à Python qui permet de savoir si
-    # la string  est dans data. Je pourrais écrire == 184, mais mon test ne passerait plus si on 
-    # ajout quelque chose avant dans le fichier HTML. Pour simplement vérifier qu'il est présent, 
-    # peu importe sa place, je mets != -1. S'il la string est absente, j'aurai un test qui ne passe
-    # pas 
+    # find() != -1 allows to know if the string is in data, independently of its position
     assert data.find("<h1>Welcome to the GUDLFT Registration Portal!</h1>") != -1
     assert data.find("Please enter your secretary email to continue:") != -1
 
 
-#showSummary / Testez le code de réponse et les données de réponse
 def test_showSummary_valid_known_email_should_status_code_200_and_return_data(client, monkeypatch):
-
     test_competitions = [
         {
             "name": "Past competition",
@@ -39,7 +32,6 @@ def test_showSummary_valid_known_email_should_status_code_200_and_return_data(cl
 
     monkeypatch.setattr(server, 'competitions', test_competitions)
 
-    # TBD : mettre en place un mock ?
     club = {
         "name":"Simply Lift",
         "email":"john@simplylift.co",
@@ -73,8 +65,6 @@ def test_showSummary_valid_known_email_should_status_code_200_and_return_data(cl
 
 
 def test_showSummary_valid_unknown_email_should_status_code_302(client):
-
-    # TBD : mettre en place un mock ?
     club = {
         "name":"FacticeClubForTests",
         "email":"facticeAdressNotInDatabase@test.test",
@@ -91,10 +81,6 @@ def test_showSummary_valid_unknown_email_should_status_code_302(client):
 
 
 def test_book_should_status_code_200_and_return_data(client):
-
-    #mettre foundClub = qq chose, idem pour found competition ; vérifier la sortie. 
-    #faire un autre test avec autres valeurs
-    #renommer tests pour explicite.
     foundClub = {
         "name":"Simply Lift",
         "email":"john@simplylift.co",
@@ -115,7 +101,6 @@ def test_book_should_status_code_200_and_return_data(client):
 
 
 def test_book_invalid_club_should_status_code_200_and_return_data(client):
-    
     foundClub = {
         "name":"invalidClub",
         "email":"invalidClub@test.test",
@@ -132,7 +117,6 @@ def test_book_invalid_club_should_status_code_200_and_return_data(client):
 
 
 def test_book_invalid_competition_should_status_code_200_and_return_data(client):
-
     foundClub = {
         "name":"Simply Lift",
         "email":"john@simplylift.co",
@@ -146,13 +130,6 @@ def test_book_invalid_competition_should_status_code_200_and_return_data(client)
         }
     response = client.get('/book/{0}/{1}'.format(foundCompetition['name'], foundClub["name"]))
     assert response.status_code == 500
-
-
-#    if foundClub and foundCompetition:
-#        return render_template('booking.html',club=foundClub,competition=foundCompetition)
-#    else:
-#        flash("Something went wrong-please try again")
-#        return render_template('welcome.html', club=club, competitions=competitions)
 
 
 def test_purchasePlaces_should_status_code_200_update_points_and_return_data(client):
@@ -189,7 +166,6 @@ def test_purchasePlaces_should_status_code_200_update_points_and_return_data(cli
 
 
 def test_purchasePlaces_should_status_code_200_flash_too_much_placesRequired(client, monkeypatch):
-
     test_competitions = [
         {
             "name": "A competition",
@@ -238,11 +214,9 @@ def test_purchasePlaces_should_status_code_200_flash_too_much_placesRequired(cli
     expected_competition_places = int(competition['numberOfPlaces'])
     assert data.find('Points available: {0}'.format(expected_club_points)) != -1
     assert data.find('Number of Places: {0}'.format(expected_competition_places)) != -1
-    print(data)
 
 
 def test_purchasePlaces_should_status_code_200_flash_too_much_placesRequired_several_bookings(client, monkeypatch):
-
     test_competitions = [
         {
             "name": "A competition",
@@ -250,7 +224,7 @@ def test_purchasePlaces_should_status_code_200_flash_too_much_placesRequired_sev
             "numberOfPlaces": "30"
         }]
 
-    #enough points to try more than 12 bookings
+    # Note : The club got enough points to try more than 12 bookings
     test_clubs = [
         {
             "name":"A club",
@@ -274,7 +248,7 @@ def test_purchasePlaces_should_status_code_200_flash_too_much_placesRequired_sev
             "points":"20"
     }
 
-    #first booking
+    # First booking
     placesRequired = MAX_CLUB_PLACES_PER_COMPETITION - 1
     first_booking_placesRequired = placesRequired
 
@@ -284,7 +258,7 @@ def test_purchasePlaces_should_status_code_200_flash_too_much_placesRequired_sev
                            'places': placesRequired}
     )
 
-    #second booking; total = MAX_CLUB_PLACES_PER_COMPETITION - 1 + 2
+    # Second booking; total of spent points = MAX_CLUB_PLACES_PER_COMPETITION - 1 + 2
     placesRequired = 2
 
     return_value = client.post("/purchasePlaces",
@@ -311,7 +285,6 @@ def test_purchasePlaces_should_status_code_200_flash_too_much_placesRequired_sev
 
 
 def test_purchasePlaces_should_status_code_200_flash_too_less_club_points(client, monkeypatch):
-
     test_competitions = [
         {
             "name": "A competition",
@@ -360,4 +333,3 @@ def test_purchasePlaces_should_status_code_200_flash_too_less_club_points(client
     expected_competition_places = int(competition['numberOfPlaces'])
     assert data.find('Points available: {0}'.format(expected_club_points)) != -1
     assert data.find('Number of Places: {0}'.format(expected_competition_places)) != -1
-    print(data)
