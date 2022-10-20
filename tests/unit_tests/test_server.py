@@ -238,3 +238,57 @@ def test_purchasePlaces_should_status_code_200_flash_too_much_placesRequired(cli
     assert data.find('Points available: {0}'.format(expected_club_points)) != -1
     assert data.find('Number of Places: {0}'.format(expected_competition_places)) != -1
     print(data)
+
+
+
+def test_purchasePlaces_should_status_code_200_flash_too_less_club_points(client, monkeypatch):
+
+    test_competitions = [
+        {
+            "name": "A competition",
+            "date": "3000-01-01 00:00:00",
+            "numberOfPlaces": "30"
+        }]
+
+    test_clubs = [
+        {
+            "name":"A club",
+            "email": "admin@mail.com",
+            "points":"4"
+        }]
+
+    monkeypatch.setattr(server, 'competitions', test_competitions)
+    monkeypatch.setattr(server, 'clubs', test_clubs)
+
+
+    competition = {
+            "name": "A competition",
+            "date": "3000-01-01 00:00:00",
+            "numberOfPlaces": "30"
+        }
+
+    club = {
+            "name":"A club",
+            "email": "admin@mail.com",
+            "points":"4"
+    }
+
+    placesRequired = int(club["points"]) + 1
+
+    return_value = client.post("/purchasePlaces",
+                   data = {'competition': competition["name"],
+                           'club': club["name"],
+                           'places': placesRequired}
+    )
+
+
+    assert return_value.status_code == 200
+    data = return_value.data.decode()
+
+    assert data.find('You are neither allowed to book more than') != -1
+
+    expected_club_points = int(club['points'])
+    expected_competition_places = int(competition['numberOfPlaces'])
+    assert data.find('Points available: {0}'.format(expected_club_points)) != -1
+    assert data.find('Number of Places: {0}'.format(expected_competition_places)) != -1
+    print(data)
