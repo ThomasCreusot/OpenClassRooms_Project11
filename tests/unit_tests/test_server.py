@@ -1,3 +1,5 @@
+import server
+
 from .conftest import client  # import de la fixture
 
 from server import index, showSummary, book, purchasePlaces, logout
@@ -19,7 +21,22 @@ def test_index_should_status_code_be_200(client):
 
 
 #showSummary / Testez le code de réponse et les données de réponse
-def test_showSummary_valid_known_email_should_status_code_200_and_return_data(client):
+def test_showSummary_valid_known_email_should_status_code_200_and_return_data(client, monkeypatch):
+
+    test_competitions = [
+        {
+            "name": "Past competition",
+            "date": "2000-01-01 00:00:00",
+            "numberOfPlaces": "1"
+        },
+        {
+            "name": "Future competition",
+            "date": "3000-12-31 00:00:00",
+            "numberOfPlaces": "1"
+        }
+    ]
+
+    monkeypatch.setattr(server, 'competitions', test_competitions)
 
     # TBD : mettre en place un mock ?
     club = {
@@ -36,6 +53,22 @@ def test_showSummary_valid_known_email_should_status_code_200_and_return_data(cl
     data = return_value.data.decode()
     assert data.find('<h2>Welcome, {0} </h2><a href="/logout">Logout</a>'.format(club['email'])) != -1
     assert data.find('Points available: {0}'.format(club['points'])) != -1
+
+    assert data.find('            Past competition<br />' "\n"
+                     '            Date: 2000-01-01 00:00:00</br>' "\n"
+                     '            Number of Places: 1' "\n"
+                     '            ' "\n"
+                     '' "\n"
+                     '                ' "\n"
+                     '                <a>Booking places is no more available</a>') != -1
+
+    assert data.find('            Future competition<br />' "\n"
+                     '            Date: 3000-12-31 00:00:00</br>' "\n"
+                     '            Number of Places: 1' "\n"
+                     '            ' "\n"
+                     '' "\n"
+                     '                ' "\n"
+                     '                <a href="/book/Future%20competition/Simply%20Lift">Book Places</a>') != -1
 
 
 def test_showSummary_valid_unknown_email_should_status_code_302(client):
