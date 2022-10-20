@@ -6,7 +6,9 @@ from server import index, showSummary, book, purchasePlaces, logout
 from server import MAX_CLUB_PLACES_PER_COMPETITION
 
 
-def test_index_should_status_code_be_200(client):
+def test_index_should_status_code_be_200_and_return_data(client):
+    """Tests if index() returns a status code = 200 and expected data"""
+
     response = client.get('/')
     data = response.data.decode()
 
@@ -17,6 +19,10 @@ def test_index_should_status_code_be_200(client):
 
 
 def test_showSummary_valid_known_email_should_status_code_200_and_return_data(client, monkeypatch):
+    """Tests if showSummary() returns a status code = 200 and expected data when email is known
+    from the json database. Expected data differs between past competitions and futures
+    competitions"""
+
     test_competitions = [
         {
             "name": "Past competition",
@@ -65,6 +71,9 @@ def test_showSummary_valid_known_email_should_status_code_200_and_return_data(cl
 
 
 def test_showSummary_valid_unknown_email_should_status_code_302(client):
+    """Tests if showSummary() returns a status code = 200 and expected data when email is not known
+    from the json database."""
+
     club = {
         "name":"FacticeClubForTests",
         "email":"facticeAdressNotInDatabase@test.test",
@@ -81,6 +90,9 @@ def test_showSummary_valid_unknown_email_should_status_code_302(client):
 
 
 def test_book_should_status_code_200_and_return_data(client):
+    """Tests if book() returns a status code = 200 and expected data when club and competition are
+    known from the json database."""
+
     foundClub = {
         "name":"Simply Lift",
         "email":"john@simplylift.co",
@@ -101,6 +113,9 @@ def test_book_should_status_code_200_and_return_data(client):
 
 
 def test_book_invalid_club_should_status_code_200_and_return_data(client):
+    """Tests if book() returns a status code = 200 and expected data when competition is known from
+    the json database but club is not."""
+
     foundClub = {
         "name":"invalidClub",
         "email":"invalidClub@test.test",
@@ -117,6 +132,9 @@ def test_book_invalid_club_should_status_code_200_and_return_data(client):
 
 
 def test_book_invalid_competition_should_status_code_200_and_return_data(client):
+    """Tests if book() returns a status code = 200 and expected data when club is known from
+    the json database but competition is not."""
+
     foundClub = {
         "name":"Simply Lift",
         "email":"john@simplylift.co",
@@ -133,6 +151,14 @@ def test_book_invalid_competition_should_status_code_200_and_return_data(client)
 
 
 def test_purchasePlaces_should_status_code_200_update_points_and_return_data(client):
+    """Tests if purchasePlaces() returns a status code = 200 and expected data when club and
+    competition are known from the database, and placesRequired is correct
+    
+    A correct placesRequired means : 
+    placesRequired < MAX_CLUB_PLACES_PER_COMPETITION
+    placesRequired <= club['points']
+    """
+
     competition = {
             "name": "Spring Festival",
             "date": "2020-03-27 10:00:00",
@@ -165,7 +191,11 @@ def test_purchasePlaces_should_status_code_200_update_points_and_return_data(cli
     assert data.find('Number of Places: {0}'.format(expected_competition_places)) != -1
 
 
-def test_purchasePlaces_should_status_code_200_flash_too_much_placesRequired(client, monkeypatch):
+def test_purchasePlaces_should_status_code_200_flash_too_much_placesRequired_one_booking(client, monkeypatch):
+    """Tests if purchasePlaces() returns a status code = 200 and expected data when club and
+    competition are known from the database, but placesRequired is higher than 
+    MAX_CLUB_PLACES_PER_COMPETITION"""
+
     test_competitions = [
         {
             "name": "A competition",
@@ -217,6 +247,10 @@ def test_purchasePlaces_should_status_code_200_flash_too_much_placesRequired(cli
 
 
 def test_purchasePlaces_should_status_code_200_flash_too_much_placesRequired_several_bookings(client, monkeypatch):
+    """Tests if purchasePlaces() returns a status code = 200 and expected data when club and
+    competition are known from the database, placesRequired of several bookings are corrects but
+    the sum of these placesRequired is higher than MAX_CLUB_PLACES_PER_COMPETITION"""
+
     test_competitions = [
         {
             "name": "A competition",
@@ -285,6 +319,9 @@ def test_purchasePlaces_should_status_code_200_flash_too_much_placesRequired_sev
 
 
 def test_purchasePlaces_should_status_code_200_flash_too_less_club_points(client, monkeypatch):
+    """Tests if purchasePlaces() returns a status code = 200 and expected data when club and
+    competition are known from the database, but placesRequired is higher than club['points']"""
+
     test_competitions = [
         {
             "name": "A competition",

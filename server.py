@@ -45,7 +45,6 @@ def get_authorisation_to_reserve_places(club, competition, placesRequired):
             if placesRequired <= MAX_CLUB_PLACES_PER_COMPETITION - club["reserved_competitions"][competition["name"]]:
                 # Club already reserved for this competition : dict update
                 club["reserved_competitions"][competition["name"]] += placesRequired
-                print(club)
                 return True
             else: 
                 return False
@@ -53,7 +52,6 @@ def get_authorisation_to_reserve_places(club, competition, placesRequired):
             # Club already reserved but not for this competition : dict creation
             if placesRequired <= MAX_CLUB_PLACES_PER_COMPETITION:
                 club["reserved_competitions"][competition["name"]] = placesRequired
-                print(club)
                 return True
             else:
                 return False
@@ -62,7 +60,6 @@ def get_authorisation_to_reserve_places(club, competition, placesRequired):
         club["reserved_competitions"] = {}
         if placesRequired <= MAX_CLUB_PLACES_PER_COMPETITION:
             club["reserved_competitions"][competition["name"]] = placesRequired
-            print(club)
             return True
         else:
             return False
@@ -84,9 +81,11 @@ def known_adress_or_not(emailFromForm):
             pass
     return known_adress
 
+
 @app.route('/')
 def index():
     return render_template('index.html')
+
 
 @app.route('/showSummary',methods=['POST'])
 def showSummary():
