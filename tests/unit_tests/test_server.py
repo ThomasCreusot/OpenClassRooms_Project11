@@ -6,13 +6,58 @@ from server import index, showSummary, book, purchasePlaces, logout
 from server import MAX_CLUB_PLACES_PER_COMPETITION
 from .conftest import basic_competitions_fixture, basic_clubs_fixture
 
+
+FUTURE_COMPETITION = {
+    "name": "Future competition",
+    "date": "3000-12-31 00:00:00",
+    "numberOfPlaces": "1"
+}
+
+PAST_COMPETITION = {
+    "name": "Past competition",
+    "date": "2000-01-01 00:00:00",
+    "numberOfPlaces": "1"
+}
+
+INVALID_COMPETITION = {
+    "name": "invalid Competition",
+    "date": "2020-01-01 00:00:00",
+    "numberOfPlaces": "0"
+}
+
+A_KNOWN_CLUB = {
+    "name":"A known club",
+    "email":"test_club@mail.co",
+    "points":"1"
+}
+
+AN_UNKNOWN_CLUB = {
+    "name":"An unknown club",
+    "email":"facticeAdressNotInDatabase@mail.co",
+    "points":"1"
+}
+
+A_CLUB_WITH_LESS_POINTS_THAN_MAX_CLUB_PLACES_PER_COMPETITION = {
+    "name":"A club with less than MAX_CLUB_PLACES_PER_COMPETITION",
+    "email":"test_club@mail.co",
+    "points":"1"
+}
+
+A_CLUB_WITH_MORE_POINTS_THAN_MAX_CLUB_PLACES_PER_COMPETITION = {
+    "name":"A club with more than MAX_CLUB_PLACES_PER_COMPETITION",
+    "email": "admin@mail.com",
+    # // conftest.py clubs_highNumberPoints_fixture
+    "points": str(MAX_CLUB_PLACES_PER_COMPETITION + 2)
+}
+
+
 def test_index_should_status_code_be_200_and_return_data(client):
     """Tests if index() returns a status code = 200 and expected data"""
 
     response = client.get('/')
-    data = response.data.decode()
-
     assert response.status_code == 200
+
+    data = response.data.decode()
     # find() != -1 allows to know if the string is in data, independently of its position
     assert data.find("<h1>Welcome to the GUDLFT Registration Portal!</h1>") != -1
     assert data.find("Please enter your secretary email to continue:") != -1
@@ -23,18 +68,14 @@ def test_showSummary_valid_known_email_should_status_code_200_and_return_data(cl
     from the json database. Expected data differs between past competitions and futures
     competitions"""
 
-    club = {
-        "name":"A known club",
-        "email":"test_club@mail.co",
-        "points":"1"
-    }
+    club = A_KNOWN_CLUB
 
     return_value = client.post(
         "/showSummary", data=club
         )
-    data = return_value.data.decode()
-
     assert return_value.status_code == 200
+
+    data = return_value.data.decode()
     assert data.find('<h2>Welcome, {0} </h2><a href="/logout">Logout</a>'.format(club['email'])) != -1
     assert data.find('Points available: {0}'.format(club['points'])) != -1
 
@@ -59,17 +100,13 @@ def test_showSummary_valid_unknown_email_should_status_code_302(client, basic_cl
     """Tests if showSummary() returns a status code = 200 and expected data when email is not known
     from the json database."""
 
-    club = {
-        "name":"An unknown club",
-        "email":"facticeAdressNotInDatabase@mail.co",
-        "points":"1"
-    }
+    club = AN_UNKNOWN_CLUB
 
     return_value = client.post(
         "/showSummary", data=club
         )
-
     assert return_value.status_code == 200
+
     data = return_value.data.decode()
     assert data.find('Unknown email adress') != -1
 
@@ -78,21 +115,13 @@ def test_book_should_status_code_200_and_return_data(client, basic_competitions_
     """Tests if book() returns a status code = 200 and expected data when club and competition are
     known from the json database."""
 
-    foundClub = {
-        "name":"A known club",
-        "email":"test_club@mail.co",
-        "points":"1"
-    }
-
-    foundCompetition = {
-            "name": "Future competition",
-            "date": "3000-12-31 00:00:00",
-            "numberOfPlaces": "1"
-        }
+    foundClub = A_KNOWN_CLUB
+    foundCompetition = FUTURE_COMPETITION
 
     response = client.get('/book/{0}/{1}'.format(foundCompetition['name'], foundClub["name"]))
-    data = response.data.decode()
     assert response.status_code == 200
+
+    data = response.data.decode()
     assert data.find('<input type="hidden" name="club" value="{0}">'.format(foundClub['name'])) != -1
     assert data.find('<input type="hidden" name="competition" value="{0}">'.format(foundCompetition['name'])) != -1
 
@@ -101,17 +130,9 @@ def test_book_invalid_club_should_status_code_200_and_return_data(client, basic_
     """Tests if book() returns a status code = 200 and expected data when competition is known from
     the json database but club is not."""
 
-    foundClub = {
-        "name":"An unknown club",
-        "email":"facticeAdressNotInDatabase@mail.co",
-        "points":"1"
-    }
+    foundClub = AN_UNKNOWN_CLUB
+    foundCompetition = FUTURE_COMPETITION
 
-    foundCompetition = {
-            "name": "Future competition",
-            "date": "3000-12-31 00:00:00",
-            "numberOfPlaces": "1"
-        }
     response = client.get('/book/{0}/{1}'.format(foundCompetition['name'], foundClub["name"]))
     assert response.status_code == 500
 
@@ -120,17 +141,8 @@ def test_book_invalid_competition_should_status_code_200_and_return_data(client,
     """Tests if book() returns a status code = 200 and expected data when club is known from
     the json database but competition is not."""
 
-    foundClub = {
-            "name":"A known club",
-            "email":"test_club@mail.co",
-            "points":"1"
-    }
-
-    foundCompetition = {
-            "name": "invalid Competition",
-            "date": "2020-01-01 00:00:00",
-            "numberOfPlaces": "0"
-        }
+    foundClub = A_KNOWN_CLUB
+    foundCompetition = INVALID_COMPETITION
 
     response = client.get('/book/{0}/{1}'.format(foundCompetition['name'], foundClub["name"]))
     assert response.status_code == 500
@@ -145,18 +157,8 @@ def test_purchasePlaces_should_status_code_200_update_points_and_return_data(cli
     placesRequired <= club['points']
     """
 
-    competition = {
-            "name": "Future competition",
-            "date": "3000-12-31 00:00:00",
-            "numberOfPlaces": "1"
-        }
-
-    club = {
-            "name":"A known club",
-            "email":"test_club@mail.co",
-            "points":"1"
-    }
-
+    competition = FUTURE_COMPETITION
+    club = A_KNOWN_CLUB
     placesRequired = 1
 
     return_value = client.post("/purchasePlaces",
@@ -164,11 +166,9 @@ def test_purchasePlaces_should_status_code_200_update_points_and_return_data(cli
                            'club': club["name"],
                            'places': placesRequired}
     )
-
-
     assert return_value.status_code == 200
-    data = return_value.data.decode()
 
+    data = return_value.data.decode()
     assert data.find('<li>Great-booking complete!</li>') != -1
 
     expected_club_points = int(club['points'])-placesRequired
@@ -182,19 +182,8 @@ def test_purchasePlaces_should_status_code_200_flash_too_much_placesRequired_one
     competition are known from the database, but placesRequired is higher than 
     MAX_CLUB_PLACES_PER_COMPETITION"""
 
-    competition = {
-            "name": "Future competition",
-            "date": "3000-12-31 00:00:00",
-            "numberOfPlaces": "1"
-        }
-
-    club = {
-            "name":"A club with more than MAX_CLUB_PLACES_PER_COMPETITION",
-            "email": "admin@mail.com",
-            # // conftest.py clubs_highNumberPoints_fixture
-            "points": str(MAX_CLUB_PLACES_PER_COMPETITION + 2)
-    }
-
+    competition = FUTURE_COMPETITION
+    club = A_CLUB_WITH_MORE_POINTS_THAN_MAX_CLUB_PLACES_PER_COMPETITION
     placesRequired = MAX_CLUB_PLACES_PER_COMPETITION + 1
 
     return_value = client.post("/purchasePlaces",
@@ -202,11 +191,9 @@ def test_purchasePlaces_should_status_code_200_flash_too_much_placesRequired_one
                            'club': club["name"],
                            'places': placesRequired}
     )
-
-
     assert return_value.status_code == 200
-    data = return_value.data.decode()
 
+    data = return_value.data.decode()
     assert data.find('You are neither allowed to book more than') != -1
 
     expected_club_points = int(club['points'])
@@ -220,24 +207,12 @@ def test_purchasePlaces_should_status_code_200_flash_too_much_placesRequired_sev
     competition are known from the database, placesRequired of several bookings are corrects but
     the sum of these placesRequired is higher than MAX_CLUB_PLACES_PER_COMPETITION"""
 
-    competition = {
-            "name": "Future competition",
-            "date": "3000-12-31 00:00:00",
-            "numberOfPlaces": "1"
-        }
-
-    club = {
-            "name":"A club with more than MAX_CLUB_PLACES_PER_COMPETITION",
-            "email": "admin@mail.com",
-            # // conftest.py clubs_highNumberPoints_fixture
-            "points": str(MAX_CLUB_PLACES_PER_COMPETITION + 2)
-    }
-
+    competition = FUTURE_COMPETITION
+    club = A_CLUB_WITH_MORE_POINTS_THAN_MAX_CLUB_PLACES_PER_COMPETITION
 
     # First booking
     placesRequired = MAX_CLUB_PLACES_PER_COMPETITION - 1
     first_booking_placesRequired = placesRequired
-
     for i in range(2):
         return_value = client.post("/purchasePlaces",
                     data = {'competition': competition["name"],
@@ -249,6 +224,7 @@ def test_purchasePlaces_should_status_code_200_flash_too_much_placesRequired_sev
             placesRequired = 2
 
     assert return_value.status_code == 200
+
     data = return_value.data.decode()
     assert data.find('You are neither allowed to book more than') != -1
 
@@ -257,28 +233,15 @@ def test_purchasePlaces_should_status_code_200_flash_too_much_placesRequired_sev
     assert data.find('Points available: {0}'.format(expected_club_points)) != -1
     assert data.find('Number of Places: {0}'.format(expected_competition_places)) != -1
     assert data.find('<li>You already booked {0} places in competition {1} and asked {2} more.</li>'.format(
-        MAX_CLUB_PLACES_PER_COMPETITION - 1,
-        competition["name"],
-        placesRequired
-    ))
+        MAX_CLUB_PLACES_PER_COMPETITION - 1, competition["name"], placesRequired))
 
 
 def test_purchasePlaces_should_status_code_200_flash_too_less_club_points(client, basic_competitions_fixture, clubs_lowNumberPoints_fixture):
     """Tests if purchasePlaces() returns a status code = 200 and expected data when club and
     competition are known from the database, but placesRequired is higher than club['points']"""
 
-    competition = {
-            "name": "Future competition",
-            "date": "3000-12-31 00:00:00",
-            "numberOfPlaces": "1"
-        }
-
-    club = {
-            "name":"A club with less than MAX_CLUB_PLACES_PER_COMPETITION",
-            "email":"test_club@mail.co",
-            "points":"1"
-        }
-
+    competition = FUTURE_COMPETITION
+    club = A_CLUB_WITH_LESS_POINTS_THAN_MAX_CLUB_PLACES_PER_COMPETITION
     placesRequired = int(club["points"]) + 1
 
     return_value = client.post("/purchasePlaces",
@@ -286,10 +249,9 @@ def test_purchasePlaces_should_status_code_200_flash_too_less_club_points(client
                            'club': club["name"],
                            'places': placesRequired}
     )
-
     assert return_value.status_code == 200
-    data = return_value.data.decode()
 
+    data = return_value.data.decode()
     assert data.find('You are neither allowed to book more than') != -1
 
     expected_club_points = int(club['points'])
