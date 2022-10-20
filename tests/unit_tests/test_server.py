@@ -1,3 +1,4 @@
+from this import d
 import server
 
 from .conftest import client  # import de la fixture
@@ -239,6 +240,74 @@ def test_purchasePlaces_should_status_code_200_flash_too_much_placesRequired(cli
     assert data.find('Number of Places: {0}'.format(expected_competition_places)) != -1
     print(data)
 
+
+def test_purchasePlaces_should_status_code_200_flash_too_much_placesRequired_several_bookings(client, monkeypatch):
+
+    test_competitions = [
+        {
+            "name": "A competition",
+            "date": "3000-01-01 00:00:00",
+            "numberOfPlaces": "30"
+        }]
+
+    #enough points to try more than 12 bookings
+    test_clubs = [
+        {
+            "name":"A club",
+            "email": "admin@mail.com",
+            "points":"20"
+        }]
+
+    monkeypatch.setattr(server, 'competitions', test_competitions)
+    monkeypatch.setattr(server, 'clubs', test_clubs)
+
+
+    competition = {
+            "name": "A competition",
+            "date": "3000-01-01 00:00:00",
+            "numberOfPlaces": "30"
+        }
+
+    club = {
+            "name":"A club",
+            "email": "admin@mail.com",
+            "points":"20"
+    }
+
+    #first booking
+    placesRequired = MAX_CLUB_PLACES_PER_COMPETITION - 1
+    first_booking_placesRequired = placesRequired
+
+    return_value = client.post("/purchasePlaces",
+                   data = {'competition': competition["name"],
+                           'club': club["name"],
+                           'places': placesRequired}
+    )
+
+    #second booking; total = MAX_CLUB_PLACES_PER_COMPETITION - 1 + 2
+    placesRequired = 2
+
+    return_value = client.post("/purchasePlaces",
+                   data = {'competition': competition["name"],
+                           'club': club["name"],
+                           'places': placesRequired}
+    )
+
+
+    assert return_value.status_code == 200
+    data = return_value.data.decode()
+
+    assert data.find('You are neither allowed to book more than') != -1
+
+    expected_club_points = int(club['points']) - first_booking_placesRequired
+    expected_competition_places = int(competition['numberOfPlaces']) - first_booking_placesRequired
+    assert data.find('Points available: {0}'.format(expected_club_points)) != -1
+    assert data.find('Number of Places: {0}'.format(expected_competition_places)) != -1
+    assert data.find('<li>You already booked {0} places in competition {1} and asked {2} more.</li>'.format(
+        MAX_CLUB_PLACES_PER_COMPETITION - 1,
+        competition["name"],
+        placesRequired
+    ))
 
 
 def test_purchasePlaces_should_status_code_200_flash_too_less_club_points(client, monkeypatch):
