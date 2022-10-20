@@ -35,21 +35,29 @@ def test_showSummary_valid_known_email_should_status_code_200_and_return_data(cl
             "numberOfPlaces": "1"
         }
     ]
-
     monkeypatch.setattr(server, 'competitions', test_competitions)
 
+    test_clubs = [
+        {
+            "name":"A known club",
+            "email":"test_club@mail.co",
+            "points":"1"
+        }
+    ]
+    monkeypatch.setattr(server, 'clubs', test_clubs)
+
     club = {
-        "name":"Simply Lift",
-        "email":"john@simplylift.co",
-        "points":"13"
+        "name":"A known club",
+        "email":"test_club@mail.co",
+        "points":"1"
     }
 
     return_value = client.post(
         "/showSummary", data=club
         )
+    data = return_value.data.decode()
 
     assert return_value.status_code == 200
-    data = return_value.data.decode()
     assert data.find('<h2>Welcome, {0} </h2><a href="/logout">Logout</a>'.format(club['email'])) != -1
     assert data.find('Points available: {0}'.format(club['points'])) != -1
 
@@ -67,17 +75,26 @@ def test_showSummary_valid_known_email_should_status_code_200_and_return_data(cl
                      '            ' "\n"
                      '' "\n"
                      '                ' "\n"
-                     '                <a href="/book/Future%20competition/Simply%20Lift">Book Places</a>') != -1
+                     '                <a href="/book/Future%20competition/A%20known%20club">Book Places</a>') != -1
 
 
-def test_showSummary_valid_unknown_email_should_status_code_302(client):
+def test_showSummary_valid_unknown_email_should_status_code_302(client, monkeypatch):
     """Tests if showSummary() returns a status code = 200 and expected data when email is not known
     from the json database."""
 
+    test_clubs = [
+        {
+            "name":"A known club",
+            "email":"test_club@mail.co",
+            "points":"1"
+        }
+    ]
+    monkeypatch.setattr(server, 'clubs', test_clubs)
+
     club = {
-        "name":"FacticeClubForTests",
-        "email":"facticeAdressNotInDatabase@test.test",
-        "points":"0"
+        "name":"An unknown club",
+        "email":"facticeAdressNotInDatabase@mail.co",
+        "points":"1"
     }
 
     return_value = client.post(
@@ -89,20 +106,44 @@ def test_showSummary_valid_unknown_email_should_status_code_302(client):
     assert data.find('Unknown email adress') != -1
 
 
-def test_book_should_status_code_200_and_return_data(client):
+def test_book_should_status_code_200_and_return_data(client, monkeypatch):
     """Tests if book() returns a status code = 200 and expected data when club and competition are
     known from the json database."""
 
+    test_competitions = [
+        {
+            "name": "Past competition",
+            "date": "2000-01-01 00:00:00",
+            "numberOfPlaces": "1"
+        },
+        {
+            "name": "Future competition",
+            "date": "3000-12-31 00:00:00",
+            "numberOfPlaces": "1"
+        }
+    ]
+    monkeypatch.setattr(server, 'competitions', test_competitions)
+
+    test_clubs = [
+        {
+            "name":"A known club",
+            "email":"test_club@mail.co",
+            "points":"1"
+        }
+    ]
+    monkeypatch.setattr(server, 'clubs', test_clubs)
+
+
     foundClub = {
-        "name":"Simply Lift",
-        "email":"john@simplylift.co",
-        "points":"13"
+        "name":"A known club",
+        "email":"test_club@mail.co",
+        "points":"1"
     }
 
     foundCompetition = {
-            "name": "Fall Classic",
-            "date": "2020-10-22 13:30:00",
-            "numberOfPlaces": "13"
+            "name": "Future competition",
+            "date": "3000-12-31 00:00:00",
+            "numberOfPlaces": "1"
         }
 
     response = client.get('/book/{0}/{1}'.format(foundCompetition['name'], foundClub["name"]))
@@ -112,45 +153,94 @@ def test_book_should_status_code_200_and_return_data(client):
     assert data.find('<input type="hidden" name="competition" value="{0}">'.format(foundCompetition['name'])) != -1
 
 
-def test_book_invalid_club_should_status_code_200_and_return_data(client):
+def test_book_invalid_club_should_status_code_200_and_return_data(client, monkeypatch):
     """Tests if book() returns a status code = 200 and expected data when competition is known from
     the json database but club is not."""
 
+    test_competitions = [
+        {
+            "name": "Past competition",
+            "date": "2000-01-01 00:00:00",
+            "numberOfPlaces": "1"
+        },
+        {
+            "name": "Future competition",
+            "date": "3000-12-31 00:00:00",
+            "numberOfPlaces": "1"
+        }
+    ]
+    monkeypatch.setattr(server, 'competitions', test_competitions)
+
+    test_clubs = [
+        {
+            "name":"A known club",
+            "email":"test_club@mail.co",
+            "points":"1"
+        }
+    ]
+    monkeypatch.setattr(server, 'clubs', test_clubs)
+
+
     foundClub = {
-        "name":"invalidClub",
-        "email":"invalidClub@test.test",
-        "points":"0"
+        "name":"An unknown club",
+        "email":"facticeAdressNotInDatabase@mail.co",
+        "points":"1"
     }
 
     foundCompetition = {
-            "name": "Fall Classic",
-            "date": "2020-10-22 13:30:00",
-            "numberOfPlaces": "13"
+            "name": "Future competition",
+            "date": "3000-12-31 00:00:00",
+            "numberOfPlaces": "1"
         }
     response = client.get('/book/{0}/{1}'.format(foundCompetition['name'], foundClub["name"]))
     assert response.status_code == 500
 
 
-def test_book_invalid_competition_should_status_code_200_and_return_data(client):
+def test_book_invalid_competition_should_status_code_200_and_return_data(client, monkeypatch):
     """Tests if book() returns a status code = 200 and expected data when club is known from
     the json database but competition is not."""
 
+    test_competitions = [
+        {
+            "name": "Past competition",
+            "date": "2000-01-01 00:00:00",
+            "numberOfPlaces": "1"
+        },
+        {
+            "name": "Future competition",
+            "date": "3000-12-31 00:00:00",
+            "numberOfPlaces": "1"
+        }
+    ]
+    monkeypatch.setattr(server, 'competitions', test_competitions)
+
+    test_clubs = [
+        {
+            "name":"A known club",
+            "email":"test_club@mail.co",
+            "points":"1"
+        }
+    ]
+    monkeypatch.setattr(server, 'clubs', test_clubs)
+
+
     foundClub = {
-        "name":"Simply Lift",
-        "email":"john@simplylift.co",
-        "points":"13"
+            "name":"A known club",
+            "email":"test_club@mail.co",
+            "points":"1"
     }
 
     foundCompetition = {
-            "name": "invalidCompetition",
-            "date": "2020-10-22 13:30:00",
+            "name": "invalid Competition",
+            "date": "2020-01-01 00:00:00",
             "numberOfPlaces": "0"
         }
+
     response = client.get('/book/{0}/{1}'.format(foundCompetition['name'], foundClub["name"]))
     assert response.status_code == 500
 
 
-def test_purchasePlaces_should_status_code_200_update_points_and_return_data(client):
+def test_purchasePlaces_should_status_code_200_update_points_and_return_data(client, monkeypatch):
     """Tests if purchasePlaces() returns a status code = 200 and expected data when club and
     competition are known from the database, and placesRequired is correct
     
@@ -159,16 +249,39 @@ def test_purchasePlaces_should_status_code_200_update_points_and_return_data(cli
     placesRequired <= club['points']
     """
 
+    test_competitions = [
+        {
+            "name": "Past competition",
+            "date": "2000-01-01 00:00:00",
+            "numberOfPlaces": "1"
+        },
+        {
+            "name": "Future competition",
+            "date": "3000-12-31 00:00:00",
+            "numberOfPlaces": "1"
+        }
+    ]
+    monkeypatch.setattr(server, 'competitions', test_competitions)
+
+    test_clubs = [
+        {
+            "name":"A known club",
+            "email":"test_club@mail.co",
+            "points":"1"
+        }
+    ]
+    monkeypatch.setattr(server, 'clubs', test_clubs)
+
     competition = {
-            "name": "Spring Festival",
-            "date": "2020-03-27 10:00:00",
-            "numberOfPlaces": "25"
+            "name": "Future competition",
+            "date": "3000-12-31 00:00:00",
+            "numberOfPlaces": "1"
         }
 
     club = {
-        "name":"Simply Lift",
-        "email":"john@simplylift.co",
-        "points":"13"
+            "name":"A known club",
+            "email":"test_club@mail.co",
+            "points":"1"
     }
 
     placesRequired = 1
@@ -198,16 +311,22 @@ def test_purchasePlaces_should_status_code_200_flash_too_much_placesRequired_one
 
     test_competitions = [
         {
-            "name": "A competition",
-            "date": "3000-01-01 00:00:00",
-            "numberOfPlaces": "30"
-        }]
+            "name": "Past competition",
+            "date": "2000-01-01 00:00:00",
+            "numberOfPlaces": "1"
+        },
+        {
+            "name": "Future competition",
+            "date": "3000-12-31 00:00:00",
+            "numberOfPlaces": "1"
+        }
+    ]
 
     test_clubs = [
         {
-            "name":"A club",
+            "name":"A club with more than MAX_CLUB_PLACES_PER_COMPETITION",
             "email": "admin@mail.com",
-            "points":"4"
+            "points":"14"
         }]
 
     monkeypatch.setattr(server, 'competitions', test_competitions)
@@ -215,15 +334,15 @@ def test_purchasePlaces_should_status_code_200_flash_too_much_placesRequired_one
 
 
     competition = {
-            "name": "A competition",
-            "date": "3000-01-01 00:00:00",
-            "numberOfPlaces": "30"
+            "name": "Future competition",
+            "date": "3000-12-31 00:00:00",
+            "numberOfPlaces": "1"
         }
 
     club = {
-            "name":"A club",
+            "name":"A club with more than MAX_CLUB_PLACES_PER_COMPETITION",
             "email": "admin@mail.com",
-            "points":"4"
+            "points":"14"
     }
 
     placesRequired = MAX_CLUB_PLACES_PER_COMPETITION + 1
@@ -253,58 +372,55 @@ def test_purchasePlaces_should_status_code_200_flash_too_much_placesRequired_sev
 
     test_competitions = [
         {
-            "name": "A competition",
-            "date": "3000-01-01 00:00:00",
-            "numberOfPlaces": "30"
-        }]
+            "name": "Past competition",
+            "date": "2000-01-01 00:00:00",
+            "numberOfPlaces": "1"
+        },
+        {
+            "name": "Future competition",
+            "date": "3000-12-31 00:00:00",
+            "numberOfPlaces": "1"
+        }
+    ]
 
-    # Note : The club got enough points to try more than 12 bookings
     test_clubs = [
         {
-            "name":"A club",
+            "name":"A club with more than MAX_CLUB_PLACES_PER_COMPETITION",
             "email": "admin@mail.com",
-            "points":"20"
+            "points":"14"
         }]
 
     monkeypatch.setattr(server, 'competitions', test_competitions)
     monkeypatch.setattr(server, 'clubs', test_clubs)
 
-
     competition = {
-            "name": "A competition",
-            "date": "3000-01-01 00:00:00",
-            "numberOfPlaces": "30"
+            "name": "Future competition",
+            "date": "3000-12-31 00:00:00",
+            "numberOfPlaces": "1"
         }
 
     club = {
-            "name":"A club",
+            "name":"A club with more than MAX_CLUB_PLACES_PER_COMPETITION",
             "email": "admin@mail.com",
-            "points":"20"
+            "points":"14"
     }
 
     # First booking
     placesRequired = MAX_CLUB_PLACES_PER_COMPETITION - 1
     first_booking_placesRequired = placesRequired
 
-    return_value = client.post("/purchasePlaces",
-                   data = {'competition': competition["name"],
-                           'club': club["name"],
-                           'places': placesRequired}
-    )
-
-    # Second booking; total of spent points = MAX_CLUB_PLACES_PER_COMPETITION - 1 + 2
-    placesRequired = 2
-
-    return_value = client.post("/purchasePlaces",
-                   data = {'competition': competition["name"],
-                           'club': club["name"],
-                           'places': placesRequired}
-    )
-
+    for i in range(2):
+        return_value = client.post("/purchasePlaces",
+                    data = {'competition': competition["name"],
+                            'club': club["name"],
+                            'places': placesRequired}
+        )
+        if i == 0:
+            # Second booking; total of spent points = MAX_CLUB_PLACES_PER_COMPETITION - 1 + 2
+            placesRequired = 2
 
     assert return_value.status_code == 200
     data = return_value.data.decode()
-
     assert data.find('You are neither allowed to book more than') != -1
 
     expected_club_points = int(club['points']) - first_booking_placesRequired
@@ -324,33 +440,40 @@ def test_purchasePlaces_should_status_code_200_flash_too_less_club_points(client
 
     test_competitions = [
         {
-            "name": "A competition",
-            "date": "3000-01-01 00:00:00",
-            "numberOfPlaces": "30"
-        }]
+            "name": "Past competition",
+            "date": "2000-01-01 00:00:00",
+            "numberOfPlaces": "1"
+        },
+        {
+            "name": "Future competition",
+            "date": "3000-12-31 00:00:00",
+            "numberOfPlaces": "1"
+        }
+    ]
+    monkeypatch.setattr(server, 'competitions', test_competitions)
 
     test_clubs = [
         {
-            "name":"A club",
-            "email": "admin@mail.com",
-            "points":"4"
-        }]
-
-    monkeypatch.setattr(server, 'competitions', test_competitions)
+            "name":"A club with less than MAX_CLUB_PLACES_PER_COMPETITION",
+            "email":"test_club@mail.co",
+            "points":"1"
+        }
+    ]
     monkeypatch.setattr(server, 'clubs', test_clubs)
 
 
     competition = {
-            "name": "A competition",
-            "date": "3000-01-01 00:00:00",
-            "numberOfPlaces": "30"
+            "name": "Future competition",
+            "date": "3000-12-31 00:00:00",
+            "numberOfPlaces": "1"
         }
 
     club = {
-            "name":"A club",
-            "email": "admin@mail.com",
-            "points":"4"
-    }
+            "name":"A club with less than MAX_CLUB_PLACES_PER_COMPETITION",
+            "email":"test_club@mail.co",
+            "points":"1"
+        }
+
 
     placesRequired = int(club["points"]) + 1
 
