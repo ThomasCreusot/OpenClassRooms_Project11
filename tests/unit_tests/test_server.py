@@ -265,3 +265,27 @@ def test_purchasePlaces_should_status_code_200_flash_too_less_club_points(client
     expected_competition_places = int(competition['numberOfPlaces'])
     assert data.find('Points available: {0}'.format(expected_club_points)) != -1
     assert data.find('Number of Places: {0}'.format(expected_competition_places)) != -1
+
+
+def test_purchasePlaces_should_status_code_200_flash_too_less_club_points_compared_to_competition(client, basic_competitions_fixture, clubs_highNumberPoints_fixture):
+    """Tests if purchasePlaces() returns a status code = 200 and expected data when club and
+    competition are known from the database, but placesRequired is higher than club['points']"""
+
+    competition = FUTURE_COMPETITION
+    club = A_CLUB_WITH_MORE_POINTS_THAN_MAX_CLUB_PLACES_PER_COMPETITION 
+    placesRequired = int(competition["numberOfPlaces"]) + 1
+
+    return_value = client.post("/purchasePlaces",
+                   data = {'competition': competition["name"],
+                           'club': club["name"],
+                           'places': placesRequired}
+    )
+    assert return_value.status_code == 200
+
+    data = return_value.data.decode()
+    assert data.find('You are neither allowed to book more than') != -1
+
+    expected_club_points = int(club['points'])
+    expected_competition_places = int(competition['numberOfPlaces'])
+    assert data.find('Points available: {0}'.format(expected_club_points)) != -1
+    assert data.find('Number of Places: {0}'.format(expected_competition_places)) != -1
