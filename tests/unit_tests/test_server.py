@@ -57,7 +57,7 @@ A_CLUB_WITH_MORE_POINTS_THAN_MAX_CLUB_PLACES_PER_COMPETITION = {
 }
 
 
-def test_index_should_status_code_be_200_and_return_data(client):
+def test_index_should_status_code_be_200_and_return_data(client, basic_clubs_fixture):
     """Tests if index() returns a status code = 200 and expected data"""
 
     response = client.get('/')
@@ -67,6 +67,14 @@ def test_index_should_status_code_be_200_and_return_data(client):
     # find() != -1 allows to know if the string is in data, independently of its position
     assert data.find("<h1>Welcome to the GUDLFT Registration Portal!</h1>") != -1
     assert data.find("Please enter your secretary email to continue:") != -1
+
+    assert data.find("<h3>Clubs:</h3>") != -1
+    assert data.find('<ul>' "\n"
+                     '        ' "\n"
+                     '        <li>' "\n"
+                     '            A known club<br />' "\n"
+                     '            Points: 1' "\n"
+                     '        </li>' "\n") != -1
 
 
 def test_showSummary_valid_known_email_should_status_code_200_and_return_data(client, basic_competitions_fixture, basic_clubs_fixture):
