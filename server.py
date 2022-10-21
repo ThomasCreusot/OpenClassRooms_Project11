@@ -44,14 +44,13 @@ def get_authorisation_to_reserve_places(club, competition, placesRequired):
         if competition["name"] in club["reserved_competitions"]:
             if placesRequired <= MAX_CLUB_PLACES_PER_COMPETITION - club["reserved_competitions"][competition["name"]]:
                 # Club already reserved for this competition : dict update
-                club["reserved_competitions"][competition["name"]] += placesRequired
                 return True
             else: 
                 return False
         else:
             # Club already reserved but not for this competition : dict creation
             if placesRequired <= MAX_CLUB_PLACES_PER_COMPETITION:
-                club["reserved_competitions"][competition["name"]] = placesRequired
+                club["reserved_competitions"][competition["name"]] = 0  # will be updated; first version : = placesRequired
                 return True
             else:
                 return False
@@ -59,10 +58,14 @@ def get_authorisation_to_reserve_places(club, competition, placesRequired):
         # Club never reserved places for any : dict creation
         club["reserved_competitions"] = {}
         if placesRequired <= MAX_CLUB_PLACES_PER_COMPETITION:
-            club["reserved_competitions"][competition["name"]] = placesRequired
+            club["reserved_competitions"][competition["name"]] = 0 # will be updated; first version : = placesRequired
             return True
         else:
             return False
+
+
+def update_authorisation_to_reserve_places(club, competition, placesRequired):
+    club["reserved_competitions"][competition["name"]] += placesRequired
 
 
 def get_enough_points_to_reserve_places(club, placesRequired):
@@ -123,6 +126,7 @@ def purchasePlaces():
 
     if authorisation_to_reserve_places == True and enough_points_to_reserve_places == True and placesRequired <= int(competition['numberOfPlaces']):
 
+        update_authorisation_to_reserve_places(club, competition, placesRequired)
         competition['numberOfPlaces'] = int(competition['numberOfPlaces'])-placesRequired
         club['points'] = int(club['points'])-placesRequired
         flash('Great-booking complete!')
@@ -139,6 +143,7 @@ def purchasePlaces():
                     placesRequired))
 
 
+    print(club)
     return render_template('welcome.html', club=club, competitions=competitions, clubs=clubs)
 
 
