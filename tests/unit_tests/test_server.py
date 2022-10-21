@@ -243,7 +243,7 @@ def test_purchasePlaces_should_status_code_200_flash_too_much_placesRequired_sev
         MAX_CLUB_PLACES_PER_COMPETITION - 1, competition["name"], placesRequired))
 
 
-def test_purchasePlaces_should_status_code_200_flash_too_less_club_points(client, basic_competitions_fixture, clubs_lowNumberPoints_fixture):
+def test_purchasePlaces_should_status_code_200_flash_too_less_club_points_compared_to_placesRequired(client, basic_competitions_fixture, clubs_lowNumberPoints_fixture):
     """Tests if purchasePlaces() returns a status code = 200 and expected data when club and
     competition are known from the database, but placesRequired is higher than club['points']"""
 
