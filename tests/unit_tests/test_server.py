@@ -175,7 +175,7 @@ def test_purchasePlaces_should_status_code_200_update_points_and_return_data(cli
     assert return_value.status_code == 200
 
     data = return_value.data.decode()
-    assert data.find('<li>Great-booking complete!</li>') != -1
+    assert data.find('<li>Great-booking complete! You booked {0} place(s) for the competition {1}</li>'.format(placesRequired, competition['name'])) != -1
 
     expected_club_points = int(club['points'])-placesRequired
     expected_competition_places = int(competition['numberOfPlaces'])-placesRequired
