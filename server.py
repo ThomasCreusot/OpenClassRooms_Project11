@@ -142,8 +142,6 @@ def purchasePlaces():
                     competition["name"],
                     placesRequired))
 
-
-    print(club)
     return render_template('welcome.html', club=club, competitions=competitions, clubs=clubs)
 
 

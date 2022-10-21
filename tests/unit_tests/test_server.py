@@ -25,6 +25,12 @@ INVALID_COMPETITION = {
     "numberOfPlaces": "0"
 }
 
+FUTURE_COMPETITION_WITH_MAX_CLUB_PLACES = {
+    "name": "Future competition",
+    "date": "3000-12-31 00:00:00",
+    "numberOfPlaces": str(MAX_CLUB_PLACES_PER_COMPETITION * 2)
+}
+
 A_KNOWN_CLUB = {
     "name":"A known club",
     "email":"test_club@mail.co",
@@ -202,12 +208,12 @@ def test_purchasePlaces_should_status_code_200_flash_too_much_placesRequired_one
     assert data.find('Number of Places: {0}'.format(expected_competition_places)) != -1
 
 
-def test_purchasePlaces_should_status_code_200_flash_too_much_placesRequired_several_bookings(client, basic_competitions_fixture, clubs_highNumberPoints_fixture):
+def test_purchasePlaces_should_status_code_200_flash_too_much_placesRequired_several_bookings(client, competitions_highNumberPoints_fixture, clubs_highNumberPoints_fixture):
     """Tests if purchasePlaces() returns a status code = 200 and expected data when club and
     competition are known from the database, placesRequired of several bookings are corrects but
     the sum of these placesRequired is higher than MAX_CLUB_PLACES_PER_COMPETITION"""
 
-    competition = FUTURE_COMPETITION
+    competition = FUTURE_COMPETITION_WITH_MAX_CLUB_PLACES
     club = A_CLUB_WITH_MORE_POINTS_THAN_MAX_CLUB_PLACES_PER_COMPETITION
 
     # First booking
@@ -232,6 +238,7 @@ def test_purchasePlaces_should_status_code_200_flash_too_much_placesRequired_sev
     expected_competition_places = int(competition['numberOfPlaces']) - first_booking_placesRequired
     assert data.find('Points available: {0}'.format(expected_club_points)) != -1
     assert data.find('Number of Places: {0}'.format(expected_competition_places)) != -1
+
     assert data.find('<li>You already booked {0} places in competition {1} and asked {2} more.</li>'.format(
         MAX_CLUB_PLACES_PER_COMPETITION - 1, competition["name"], placesRequired))
 

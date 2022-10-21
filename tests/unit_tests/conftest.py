@@ -29,6 +29,18 @@ def basic_competitions_fixture(monkeypatch):
 
 
 @pytest.fixture
+def competitions_highNumberPoints_fixture(monkeypatch):
+    test_competitions = [
+        {
+            "name": "Future competition",
+            "date": "3000-12-31 00:00:00",
+            "numberOfPlaces": str(MAX_CLUB_PLACES_PER_COMPETITION * 2)
+        }
+    ]
+    monkeypatch.setattr(server, 'competitions', test_competitions)
+
+
+@pytest.fixture
 def basic_clubs_fixture(monkeypatch):
     test_clubs = [
         {
