@@ -183,12 +183,12 @@ def test_purchasePlaces_should_status_code_200_update_points_and_return_data(cli
     assert data.find('Number of Places: {0}'.format(expected_competition_places)) != -1
 
 
-def test_purchasePlaces_should_status_code_200_flash_too_much_placesRequired_one_booking(client, basic_competitions_fixture, clubs_highNumberPoints_fixture):
+def test_purchasePlaces_should_status_code_200_flash_too_much_placesRequired_one_booking(client, competitions_highNumberPoints_fixture, clubs_highNumberPoints_fixture):
     """Tests if purchasePlaces() returns a status code = 200 and expected data when club and
     competition are known from the database, but placesRequired is higher than 
     MAX_CLUB_PLACES_PER_COMPETITION"""
 
-    competition = FUTURE_COMPETITION
+    competition = FUTURE_COMPETITION_WITH_MAX_CLUB_PLACES
     club = A_CLUB_WITH_MORE_POINTS_THAN_MAX_CLUB_PLACES_PER_COMPETITION
     placesRequired = MAX_CLUB_PLACES_PER_COMPETITION + 1
 
