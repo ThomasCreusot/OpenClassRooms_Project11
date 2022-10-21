@@ -129,7 +129,7 @@ def purchasePlaces():
         update_authorisation_to_reserve_places(club, competition, placesRequired)
         competition['numberOfPlaces'] = int(competition['numberOfPlaces'])-placesRequired
         club['points'] = int(club['points'])-placesRequired
-        flash('Great-booking complete!')
+        flash('Great-booking complete! You booked {0} place(s) for the competition {1}'.format(placesRequired, competition['name']))
 
         competition_date_validity(competitions)
 
